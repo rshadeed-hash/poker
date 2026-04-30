@@ -1,0 +1,556 @@
+cat > /home/claude/poker-multiplayer.html << 'HTMLEOF'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poker — Multiplayer</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#061a10;font-family:'Crimson Pro',Georgia,serif;color:#f0e6cc;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:1rem;}
+h1{font-family:'Cinzel',serif;font-size:24px;color:#c9a84c;letter-spacing:3px;text-align:center;margin-bottom:.25rem;}
+.sub{font-size:13px;color:#8aab8e;text-align:center;margin-bottom:1rem;letter-spacing:1px;}
+#app{width:100%;max-width:680px;}
+.panel{background:rgba(0,0,0,.45);border:.5px solid #1e6b38;border-radius:14px;padding:1.5rem;margin-bottom:1rem;}
+.panel h2{font-family:'Cinzel',serif;font-size:16px;color:#c9a84c;margin-bottom:1rem;letter-spacing:1px;}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:.75rem;}
+input[type=text],input[type=number]{font-family:'Cinzel',serif;font-size:13px;padding:9px 12px;border-radius:8px;border:.5px solid #1e6b38;background:rgba(0,0,0,.5);color:#f0e6cc;flex:1;min-width:120px;}
+button{font-family:'Cinzel',serif;font-size:12px;padding:9px 18px;border-radius:8px;border:.5px solid #1e6b38;background:rgba(255,255,255,.05);color:#f0e6cc;cursor:pointer;transition:all .15s;letter-spacing:.5px;}
+button:hover:not(:disabled){background:rgba(255,255,255,.12);}
+button:active:not(:disabled){transform:scale(.97);}
+button:disabled{opacity:.3;cursor:not-allowed;}
+button.primary{background:#c9a84c;color:#061a10;border-color:#c9a84c;font-weight:600;}
+button.primary:hover:not(:disabled){background:#e2c97e;}
+button.danger{border-color:#c0392b;color:#e8a090;}
+button.danger:hover:not(:disabled){background:rgba(192,57,43,.2);}
+.code-box{font-family:'Cinzel',serif;font-size:28px;color:#c9a84c;letter-spacing:8px;text-align:center;padding:1rem;background:rgba(0,0,0,.4);border-radius:10px;border:1px solid #c9a84c;}
+.players-list{display:flex;flex-direction:column;gap:6px;margin-top:.75rem;}
+.player-entry{display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(0,0,0,.3);border-radius:8px;border:.5px solid #1e6b38;}
+.player-entry .dot{width:8px;height:8px;border-radius:50%;background:#2ecc71;flex-shrink:0;}
+.player-entry .dot.off{background:#555;}
+.pname-entry{font-family:'Cinzel',serif;font-size:13px;color:#e2c97e;}
+.chips-entry{font-size:12px;color:#8aab8e;margin-left:auto;}
+.host-badge{font-size:10px;background:rgba(201,168,76,.15);border:.5px solid #c9a84c;border-radius:4px;padding:1px 6px;color:#c9a84c;}
+.status-bar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:.75rem;}
+.stat{background:rgba(0,0,0,.4);border:.5px solid #1e6b38;border-radius:8px;padding:5px 14px;text-align:center;}
+.sl{font-size:10px;color:#8aab8e;letter-spacing:1px;text-transform:uppercase;}
+.sv{font-family:'Cinzel',serif;font-size:14px;color:#c9a84c;}
+.opp-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:.75rem;}
+.opp{background:rgba(0,0,0,.35);border:.5px solid #1e6b38;border-radius:10px;padding:8px 12px;text-align:center;min-width:100px;transition:border-color .3s;}
+.opp.acting{border-color:#c9a84c;box-shadow:0 0 0 1px #c9a84c;}
+.opp.folded{opacity:.3;}
+.opp.winner{border-color:#2ecc71;}
+.on{font-family:'Cinzel',serif;font-size:11px;color:#e2c97e;margin-bottom:2px;}
+.oc{font-size:13px;}
+.ob{font-size:11px;color:#e8a090;min-height:14px;}
+.occ{display:flex;gap:3px;justify-content:center;margin-top:5px;}
+.table{background:#0d3320;border-radius:80px;border:3px solid #1e6b38;padding:1.25rem 1rem;margin:.75rem 0;display:flex;flex-direction:column;align-items:center;gap:8px;}
+.community{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;min-height:76px;align-items:center;}
+.pd{font-family:'Cinzel',serif;font-size:13px;color:#c9a84c;letter-spacing:1px;}
+.hl{font-size:11px;color:#8aab8e;letter-spacing:1px;text-transform:uppercase;text-align:center;margin-top:.5rem;}
+.hand{display:flex;gap:8px;justify-content:center;margin:.5rem 0 .75rem;}
+.card{width:54px;height:76px;background:#fffef8;border-radius:8px;border:.5px solid #ccc;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#111;animation:deal .25s ease-out;}
+.card.red{color:#c0392b;}
+.card.back{background:repeating-linear-gradient(45deg,#1a4a2e,#1a4a2e 4px,#163d24 4px,#163d24 8px);border:2px solid #c9a84c;}
+.cr{font-family:'Cinzel',serif;font-size:15px;}
+.cs{font-size:13px;}
+.sc{width:28px;height:38px;background:#fffef8;border-radius:4px;border:.5px solid #bbb;display:flex;align-items:center;justify-content:center;font-size:10px;color:#111;}
+.sc.red{color:#c0392b;}
+.sc.back{background:repeating-linear-gradient(45deg,#1a4a2e,#1a4a2e 3px,#163d24 3px,#163d24 6px);border:1.5px solid #c9a84c;}
+@keyframes deal{from{transform:rotateY(90deg) scale(.8);opacity:0;}to{transform:none;opacity:1;}}
+.msg{text-align:center;font-family:'Cinzel',serif;font-size:16px;min-height:26px;color:#c9a84c;margin:.25rem 0;}
+.msg.bad{color:#e8a090;}
+.msg.good{color:#2ecc71;}
+.ctrls{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:.5rem 0;}
+.rr{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:4px;}
+.rr input{width:100px;}
+.hr{font-size:12px;color:#8aab8e;text-align:center;margin-top:2px;font-style:italic;}
+.log{background:rgba(0,0,0,.3);border-radius:8px;padding:.75rem;max-height:100px;overflow-y:auto;font-size:12px;color:#8aab8e;margin-top:.5rem;}
+.log p{margin-bottom:3px;}
+.connection-status{font-size:11px;text-align:center;color:#8aab8e;margin-bottom:.5rem;}
+.connection-status.ok{color:#2ecc71;}
+.connection-status.err{color:#e8a090;}
+.turn-indicator{text-align:center;font-size:12px;color:#8aab8e;margin-bottom:.25rem;}
+.turn-indicator.yours{color:#c9a84c;font-weight:600;}
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>&#9824; POKER &#9829;</h1>
+  <p class="sub">Multiplayer Texas Hold'em &mdash; Real players</p>
+
+  <!-- LOBBY -->
+  <div id="lobby">
+    <div class="panel">
+      <h2>&#9824; Join or Create a Table</h2>
+      <div class="row">
+        <input type="text" id="nameInput" placeholder="Your name..." maxlength="16">
+      </div>
+      <div class="row">
+        <button class="primary" onclick="createRoom()">Create Table</button>
+        <span style="color:#8aab8e;font-size:13px;">— or —</span>
+        <input type="text" id="codeInput" placeholder="Enter join code..." maxlength="6" style="text-transform:uppercase">
+        <button onclick="joinRoom()">Join</button>
+      </div>
+      <div class="connection-status" id="conn-status">Connecting to server...</div>
+    </div>
+  </div>
+
+  <!-- WAITING ROOM -->
+  <div id="waiting" style="display:none">
+    <div class="panel">
+      <h2>&#9824; Waiting Room</h2>
+      <p style="font-size:13px;color:#8aab8e;margin-bottom:.75rem;">Share this code with friends:</p>
+      <div class="code-box" id="room-code">------</div>
+      <div class="players-list" id="players-list"></div>
+      <div style="margin-top:1rem;display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="primary" id="start-btn" onclick="startGame()" style="display:none">Start Game (2-6 players)</button>
+        <button onclick="leaveRoom()" class="danger">Leave Table</button>
+      </div>
+      <div class="log" id="wait-log"></div>
+    </div>
+  </div>
+
+  <!-- GAME -->
+  <div id="game" style="display:none">
+    <div class="status-bar">
+      <div class="stat"><div class="sl">Your chips</div><div class="sv" id="sc">$1000</div></div>
+      <div class="stat"><div class="sl">Pot</div><div class="sv" id="sp">$0</div></div>
+      <div class="stat"><div class="sl">Blind</div><div class="sv">$10/$20</div></div>
+      <div class="stat"><div class="sl">Round</div><div class="sv" id="sr">0</div></div>
+    </div>
+    <div class="opp-row" id="opp-row"></div>
+    <div class="table">
+      <div class="community" id="community"><span style="color:#3a6b42;font-size:13px;font-style:italic;">Waiting for deal...</span></div>
+      <div class="pd" id="pot-label">Pot: $0</div>
+    </div>
+    <div class="hl">Your hand</div>
+    <div class="hand" id="ph"></div>
+    <div class="hr" id="handrank"></div>
+    <div class="turn-indicator" id="turn-ind"></div>
+    <div class="msg" id="msg">Waiting for hand to start...</div>
+    <div class="ctrls" id="cd"><button class="primary" id="deal-btn" onclick="hostDeal()" style="display:none">Deal Next Hand</button></div>
+    <div class="ctrls" id="ca" style="display:none">
+      <button class="danger" onclick="sendAction('fold')">Fold</button>
+      <button onclick="sendAction('check')" id="bck">Check</button>
+      <button onclick="sendAction('call')" id="bcl">Call $0</button>
+      <button onclick="showRaiseInput()" id="br">Raise</button>
+    </div>
+    <div class="rr" id="rr" style="display:none">
+      <input type="number" id="ra" min="20" step="10" value="40">
+      <button class="primary" onclick="sendRaise()">Confirm Raise</button>
+      <button onclick="document.getElementById('rr').style.display='none'">Cancel</button>
+    </div>
+    <div class="log" id="game-log"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<script>
+// ── Constants ──────────────────────────────────────────────────────────────
+const SU=['♠','♥','♦','♣'],RK=['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+const RV={2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13,A:14};
+const HN=['High card','One pair','Two pair','Three of a kind','Straight','Flush','Full house','Four of a kind','Straight flush'];
+const BB=20;
+
+// ── State ──────────────────────────────────────────────────────────────────
+let peer=null,hostConn=null,guestConns={};
+let myId='',myName='',roomCode='',isHost=false;
+let players=[]; // {id, name, chips, cards, bet, folded, connected}
+let myIdx=0,deck=[],community=[],pot=0,curBet=0,street=0,roundNum=0,actingIdx=0,dealerIdx=0;
+
+// ── PeerJS setup ───────────────────────────────────────────────────────────
+function initPeer(){
+  setConnStatus('Connecting...');
+  peer=new Peer({debug:0});
+  peer.on('open',id=>{myId=id;setConnStatus('Connected',true);});
+  peer.on('error',e=>{setConnStatus('Connection error: '+e.type,false,true);});
+  peer.on('connection',conn=>handleGuestConn(conn));
+}
+
+function setConnStatus(m,ok=false,err=false){
+  const el=document.getElementById('conn-status');
+  el.textContent=m;el.className='connection-status'+(ok?' ok':err?' err':'');
+}
+
+// ── Room management ────────────────────────────────────────────────────────
+function createRoom(){
+  myName=document.getElementById('nameInput').value.trim()||'Host';
+  if(!peer||!peer.id){alert('Still connecting, please wait...');return;}
+  isHost=true;
+  roomCode=Math.random().toString(36).substring(2,8).toUpperCase();
+  myIdx=0;
+  players=[{id:myId,name:myName,chips:1000,cards:[],bet:0,folded:false,connected:true}];
+  showWaiting();
+  renderWaiting();
+  addWaitLog('You created the table. Share code: '+roomCode);
+}
+
+function joinRoom(){
+  myName=document.getElementById('nameInput').value.trim()||'Player';
+  const code=document.getElementById('codeInput').value.trim().toUpperCase();
+  if(!code||code.length<6){alert('Enter a valid 6-character code.');return;}
+  if(!peer||!peer.id){alert('Still connecting...');return;}
+  // The host's peer ID is encoded in the room code via a lookup
+  // We use a simple convention: host broadcasts their peerId via a relay
+  // For simplicity: the room code IS a partial peer ID stored in a free KV
+  // We'll use a free public signaling approach: store host peerId in a public paste bin
+  // Actually simpler: encode host peer ID in the join URL, and room code is just display
+  alert('To join, ask the host to send you the full join link from their browser.\n\nThe host should click "Copy Join Link" and share it with you.');
+}
+
+function copyJoinLink(){
+  const url=location.href.split('?')[0]+'?host='+myId+'&code='+roomCode;
+  navigator.clipboard.writeText(url).then(()=>alert('Join link copied! Share it with your friends.')).catch(()=>prompt('Copy this link:',url));
+}
+
+function checkForJoinParams(){
+  const params=new URLSearchParams(location.search);
+  const hostId=params.get('host');
+  const code=params.get('code');
+  if(hostId&&code){
+    document.getElementById('codeInput').value=code;
+    setTimeout(()=>joinViaLink(hostId,code),1000);
+  }
+}
+
+function joinViaLink(hostId,code){
+  myName=document.getElementById('nameInput').value.trim()||'Player '+Math.floor(Math.random()*99);
+  if(!peer||!peer.id){setTimeout(()=>joinViaLink(hostId,code),500);return;}
+  roomCode=code;isHost=false;
+  const conn=peer.connect(hostId,{metadata:{name:myName,id:myId}});
+  hostConn=conn;
+  conn.on('open',()=>{
+    addWaitLog('Connected to host!');
+    conn.send({type:'join',name:myName,id:myId});
+  });
+  conn.on('data',d=>handleHostMsg(d));
+  conn.on('close',()=>setConnStatus('Disconnected from host',false,true));
+  showWaiting();
+  addWaitLog('Connecting to table '+code+'...');
+}
+
+function handleGuestConn(conn){
+  const gId=conn.peer;
+  guestConns[gId]=conn;
+  conn.on('data',d=>handleGuestMsg(gId,d));
+  conn.on('close',()=>{
+    const p=players.find(p=>p.id===gId);
+    if(p){p.connected=false;addWaitLog(p.name+' disconnected.');}
+    renderWaiting();
+  });
+}
+
+function handleGuestMsg(gId,d){
+  if(d.type==='join'){
+    const exists=players.find(p=>p.id===gId);
+    if(!exists)players.push({id:gId,name:d.name,chips:1000,cards:[],bet:0,folded:false,connected:true});
+    broadcastState();
+    renderWaiting();
+    addWaitLog(d.name+' joined the table!');
+    document.getElementById('start-btn').style.display=players.length>=2?'block':'none';
+  }
+  if(d.type==='action')handlePlayerAction(gId,d);
+}
+
+function handleHostMsg(d){
+  if(d.type==='state'){
+    players=d.players;myIdx=players.findIndex(p=>p.id===myId);
+    community=d.community;pot=d.pot;curBet=d.curBet;street=d.street;
+    roundNum=d.roundNum;actingIdx=d.actingIdx;dealerIdx=d.dealerIdx;
+    // restore my own cards
+    const me=players[myIdx];
+    if(d.myCards&&d.myCards[myId])me.cards=d.myCards[myId];
+    renderGame();
+    if(d.message)setMsg(d.message,d.msgCls);
+    if(d.gameStarted&&document.getElementById('game').style.display==='none'){showGame();}
+    updateActionButtons();
+  }
+  if(d.type==='lobby'){players=d.players;renderWaiting();}
+  if(d.type==='log')addWaitLog(d.msg);
+}
+
+function broadcastState(message='',msgCls=''){
+  const myCards={};
+  players.forEach(p=>{myCards[p.id]=p.cards;});
+  const stateForAll={type:'state',players:players.map(p=>({...p,cards:p.cards.map(()=>({r:'?',s:'?'}))})),
+    community,pot,curBet,street,roundNum,actingIdx,dealerIdx,gameStarted:true,message,msgCls,myCards};
+  // send each guest their own cards
+  players.forEach((p,i)=>{
+    if(p.id===myId)return;
+    const conn=guestConns[p.id];
+    if(!conn)return;
+    const personalState={...stateForAll,myCards:{[p.id]:p.cards}};
+    conn.send(personalState);
+  });
+  // update host UI
+  renderGame();
+  if(message)setMsg(message,msgCls);
+  updateActionButtons();
+}
+
+function broadcastLobby(){
+  Object.values(guestConns).forEach(c=>c.send({type:'lobby',players}));
+}
+
+function broadcastLog(msg){
+  addWaitLog(msg);
+  Object.values(guestConns).forEach(c=>c.send({type:'log',msg}));
+}
+
+// ── UI helpers ─────────────────────────────────────────────────────────────
+function showLobby(){document.getElementById('lobby').style.display='block';document.getElementById('waiting').style.display='none';document.getElementById('game').style.display='none';}
+function showWaiting(){document.getElementById('lobby').style.display='none';document.getElementById('waiting').style.display='block';document.getElementById('game').style.display='none';}
+function showGame(){document.getElementById('lobby').style.display='none';document.getElementById('waiting').style.display='none';document.getElementById('game').style.display='block';}
+function leaveRoom(){location.href=location.href.split('?')[0];}
+
+function addWaitLog(msg){
+  const log=document.getElementById('wait-log');
+  const p=document.createElement('p');p.textContent=msg;log.appendChild(p);log.scrollTop=log.scrollHeight;
+}
+function addGameLog(msg){
+  const log=document.getElementById('game-log');
+  const p=document.createElement('p');p.textContent=msg;log.appendChild(p);log.scrollTop=log.scrollHeight;
+}
+
+function renderWaiting(){
+  document.getElementById('room-code').textContent=roomCode||'------';
+  const list=document.getElementById('players-list');
+  list.innerHTML=players.map((p,i)=>`
+    <div class="player-entry">
+      <div class="dot${p.connected===false?' off':''}"></div>
+      <span class="pname-entry">${p.name}</span>
+      ${i===0?'<span class="host-badge">HOST</span>':''}
+      <span class="chips-entry">$${p.chips}</span>
+    </div>`).join('');
+  if(isHost)document.getElementById('start-btn').style.display=players.length>=2?'block':'none';
+}
+
+function isRed(s){return s==='♥'||s==='♦';}
+function cH(c,hidden,small){
+  if(hidden||c.r==='?')return small?'<div class="sc back"></div>':'<div class="card back"></div>';
+  const r=isRed(c.s);
+  if(small)return`<div class="sc${r?' red':''}">${c.r}${c.s}</div>`;
+  return`<div class="card${r?' red':''}"><div class="cr">${c.r}</div><div class="cs">${c.s}</div></div>`;
+}
+
+function renderGame(){
+  const me=players[myIdx]||{chips:0,cards:[],bet:0};
+  document.getElementById('sc').textContent='$'+me.chips;
+  document.getElementById('sp').textContent='$'+pot;
+  document.getElementById('sr').textContent=roundNum;
+  document.getElementById('pot-label').textContent='Pot: $'+pot;
+  const cEl=document.getElementById('community');
+  cEl.innerHTML=community.length?community.map(c=>cH(c)).join(''):'<span style="color:#3a6b42;font-size:13px;font-style:italic;">Waiting for flop...</span>';
+  document.getElementById('ph').innerHTML=(me.cards||[]).map(c=>cH(c)).join('');
+  if(me.cards&&me.cards.length>=2&&community.length>=3){
+    const r=bestH(me.cards,community);
+    document.getElementById('handrank').textContent=HN[r[0]];
+  }else document.getElementById('handrank').textContent='';
+  const others=players.filter((_,i)=>i!==myIdx);
+  document.getElementById('opp-row').innerHTML=others.map((p,i)=>`
+    <div class="opp${p.folded?' folded':''}${players.indexOf(p)===actingIdx?' acting':''}${p.winner?' winner':''}">
+      <div class="on">${p.name}</div>
+      <div class="oc">$${p.chips}</div>
+      <div class="ob">${p.bet>0?'Bet: $'+p.bet:''}</div>
+      <div class="occ">${(p.cards||[]).map(c=>cH(c,true,true)).join('')}</div>
+    </div>`).join('');
+  if(isHost)document.getElementById('deal-btn').style.display=street===0||street>3?'block':'none';
+  const isMyTurn=actingIdx===myIdx;
+  const turnEl=document.getElementById('turn-ind');
+  if(actingIdx>=0&&actingIdx<players.length){
+    const actName=players[actingIdx]?.name;
+    turnEl.textContent=isMyTurn?'Your turn!':actName+"'s turn...";
+    turnEl.className='turn-indicator'+(isMyTurn?' yours':'');
+  }
+}
+
+function setMsg(m,c=''){const el=document.getElementById('msg');el.textContent=m;el.className='msg '+(c||'');}
+
+function updateActionButtons(){
+  const isMyTurn=actingIdx===myIdx;
+  const me=players[myIdx]||{chips:0,bet:0,folded:false};
+  document.getElementById('ca').style.display=(isMyTurn&&!me.folded&&street>0&&street<=4)?'flex':'none';
+  const toCall=curBet-me.bet;
+  document.getElementById('bck').disabled=toCall>0;
+  const cb=document.getElementById('bcl');cb.disabled=toCall<=0;
+  cb.textContent=toCall>0?'Call $'+Math.min(toCall,me.chips):'Call';
+  document.getElementById('ra').value=Math.min(curBet*2||BB*2,me.chips);
+}
+
+// ── Game logic (host only) ─────────────────────────────────────────────────
+function shuf(a){for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
+function buildDeck(){deck=[];for(let s of SU)for(let r of RK)deck.push({r,s});shuf(deck);}
+function pop(){return deck.pop();}
+
+function startGame(){
+  if(players.length<2){alert('Need at least 2 players!');return;}
+  showGame();
+  addGameLog('Game started with '+players.length+' players!');
+  broadcastState('Game started! Host will deal.');
+  document.getElementById('deal-btn').style.display='block';
+}
+
+function hostDeal(){
+  if(!isHost)return;
+  roundNum++;buildDeck();community=[];pot=0;street=1;curBet=BB;
+  players.forEach(p=>{p.cards=[pop(),pop()];p.bet=0;p.folded=false;p.winner=false;});
+  // blinds
+  const sbIdx=(dealerIdx+1)%players.length;
+  const bbIdx=(dealerIdx+2)%players.length;
+  const sb=players[sbIdx],bb2=players[bbIdx];
+  const sa=Math.min(BB/2,sb.chips);sb.chips-=sa;sb.bet=sa;pot+=sa;
+  const ba=Math.min(BB,bb2.chips);bb2.chips-=ba;bb2.bet=ba;pot+=ba;
+  actingIdx=(bbIdx+1)%players.length;
+  dealerIdx=(dealerIdx+1)%players.length;
+  addGameLog('--- Round '+roundNum+' ---');
+  addGameLog('Blinds posted. Pre-flop.');
+  broadcastState('Pre-flop dealing...','');
+  document.getElementById('deal-btn').style.display='none';
+  // deal community
+  setTimeout(()=>{broadcastState('Pre-flop — '+players[actingIdx].name+"'s turn");},600);
+}
+
+function handlePlayerAction(fromId,d){
+  if(!isHost)return;
+  const pIdx=players.findIndex(p=>p.id===fromId);
+  if(pIdx!==actingIdx)return; // not their turn
+  processAction(pIdx,d.action,d.amount);
+}
+
+function sendAction(action){
+  if(isHost){processAction(myIdx,action,0);return;}
+  hostConn.send({type:'action',action,amount:0});
+}
+
+function showRaiseInput(){document.getElementById('rr').style.display='flex';}
+
+function sendRaise(){
+  const amt=parseInt(document.getElementById('ra').value)||BB*2;
+  document.getElementById('rr').style.display='none';
+  if(isHost){processAction(myIdx,'raise',amt);return;}
+  hostConn.send({type:'action',action:'raise',amount:amt});
+}
+
+function processAction(pIdx,action,amount){
+  const p=players[pIdx];
+  if(action==='fold'){p.folded=true;addGameLog(p.name+' folds.');}
+  else if(action==='check'){addGameLog(p.name+' checks.');}
+  else if(action==='call'){
+    const tc=Math.min(curBet-p.bet,p.chips);
+    p.chips-=tc;pot+=tc;p.bet+=tc;
+    addGameLog(p.name+' calls $'+tc+'.');
+  }
+  else if(action==='raise'){
+    const tgt=Math.max(curBet+BB,Math.min(amount,p.chips+p.bet));
+    const add=Math.min(tgt-p.bet,p.chips);
+    p.chips-=add;pot+=add;p.bet+=add;curBet=p.bet;
+    addGameLog(p.name+' raises to $'+p.bet+'.');
+  }
+  // advance to next active player
+  advanceAction();
+}
+
+function advanceAction(){
+  const active=players.filter(p=>!p.folded&&p.chips>0);
+  if(active.length<=1){doShowdown();return;}
+  // find next player who hasn't matched the bet or folded
+  let next=(actingIdx+1)%players.length;
+  let count=0;
+  while(count<players.length){
+    const p=players[next];
+    if(!p.folded&&p.chips>0&&p.bet<curBet){actingIdx=next;break;}
+    next=(next+1)%players.length;count++;
+  }
+  // if everyone has matched bet, move to next street
+  const needAction=players.some(p=>!p.folded&&p.chips>0&&p.bet<curBet);
+  if(!needAction){
+    players.forEach(p=>p.bet=0);curBet=0;
+    street++;
+    if(street===2){community=[pop(),pop(),pop()];addGameLog('Flop dealt.');}
+    else if(street===3){community.push(pop());addGameLog('Turn dealt.');}
+    else if(street===4){community.push(pop());addGameLog('River dealt.');}
+    else{doShowdown();return;}
+    actingIdx=players.findIndex(p=>!p.folded);
+    broadcastState(['','','Flop','Turn','River'][street]+" — "+players[actingIdx].name+"'s turn");
+    return;
+  }
+  broadcastState(players[actingIdx].name+"'s turn");
+}
+
+function doShowdown(){
+  street=5;
+  const active=players.filter(p=>!p.folded);
+  if(active.length===1){
+    active[0].chips+=pot;active[0].winner=true;
+    addGameLog(active[0].name+' wins $'+pot+' (everyone folded).');
+    broadcastState(active[0].name+' wins $'+pot+'!','good');
+  }else{
+    // evaluate hands
+    let best=[-1,0],winner=null;
+    active.forEach(p=>{
+      const r=bestH(p.cards,community);
+      if(r[0]>best[0]||(r[0]===best[0]&&r[1]>best[1])){best=r;winner=p;}
+    });
+    if(winner){winner.chips+=pot;winner.winner=true;}
+    const result=active.map(p=>`${p.name}: ${HN[bestH(p.cards,community)[0]]}`).join(' | ');
+    addGameLog('Showdown! '+result);
+    addGameLog(winner.name+' wins $'+pot+'!');
+    broadcastState(winner.name+' wins $'+pot+' with '+HN[best[0]]+'!','good');
+  }
+  actingIdx=-1;
+  setTimeout(()=>{document.getElementById('deal-btn').style.display=isHost?'block':'none';},500);
+  // check bust-outs
+  players.forEach(p=>{if(p.chips<=0){p.chips=0;}});
+}
+
+// ── Hand evaluation ────────────────────────────────────────────────────────
+function hRank(cards){
+  const cnt={},sm={};
+  for(let c of cards){cnt[c.r]=(cnt[c.r]||0)+1;(sm[c.s]=sm[c.s]||[]).push(RV[c.r]);}
+  const vals=cards.map(c=>RV[c.r]).sort((a,b)=>b-a);
+  const grps=Object.values(cnt).sort((a,b)=>b-a);
+  const flush=Object.values(sm).find(v=>v.length>=5);
+  const uniq=[...new Set(vals)].sort((a,b)=>b-a);
+  let straight=false,hs=0;
+  const sv=uniq.includes(14)?[...uniq,1]:uniq;
+  for(let i=0;i<=sv.length-5;i++){let run=1;for(let j=i+1;j<sv.length&&run<5;j++){if(sv[j]===sv[j-1]-1)run++;else break;}if(run>=5){straight=true;hs=sv[i];break;}}
+  if(flush&&straight)return[8,hs];
+  if(grps[0]===4)return[7,Math.max(...Object.entries(cnt).filter(([,v])=>v===4).map(([k])=>RV[k]))];
+  if(grps[0]===3&&grps[1]>=2)return[6,0];
+  if(flush)return[5,Math.max(...flush)];
+  if(straight)return[4,hs];
+  if(grps[0]===3)return[3,0];
+  if(grps[0]===2&&grps[1]===2)return[2,0];
+  if(grps[0]===2)return[1,Math.max(...Object.entries(cnt).filter(([,v])=>v===2).map(([k])=>RV[k]))];
+  return[0,vals[0]];
+}
+function bestH(hole,board){
+  if(!hole||hole.some(c=>c.r==='?'))return[0,0];
+  const all=[...hole,...board];
+  if(all.length<5)return hRank(all);
+  let best=[-1,0];
+  for(let i=0;i<all.length-1;i++)for(let j=i+1;j<all.length;j++){
+    const five=all.filter((_,x)=>x!==i&&x!==j);
+    if(five.length<5)continue;
+    const r=hRank(five);
+    if(r[0]>best[0]||(r[0]===best[0]&&r[1]>best[1]))best=r;
+  }
+  return best[0]===-1?hRank(all):best;
+}
+
+// ── Boot ───────────────────────────────────────────────────────────────────
+initPeer();
+checkForJoinParams();
+
+// host copy-link button
+document.getElementById('room-code').addEventListener('click',()=>{
+  if(isHost)copyJoinLink();
+});
+document.getElementById('room-code').title='Click to copy join link (host only)';
+</script>
+</body>
+</html>
+HTMLEOF
+echo "done"
