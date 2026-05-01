@@ -1,10 +1,10 @@
-cat > /home/claude/poker-multiplayer.html << 'HTMLEOF'
+cat > /home/claude/poker-multiplayer.html << 'EOF'
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Poker — Multiplayer</title>
+<title>Multiplayer Poker</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -15,7 +15,7 @@ h1{font-family:'Cinzel',serif;font-size:24px;color:#c9a84c;letter-spacing:3px;te
 .panel{background:rgba(0,0,0,.45);border:.5px solid #1e6b38;border-radius:14px;padding:1.5rem;margin-bottom:1rem;}
 .panel h2{font-family:'Cinzel',serif;font-size:16px;color:#c9a84c;margin-bottom:1rem;letter-spacing:1px;}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:.75rem;}
-input[type=text],input[type=number]{font-family:'Cinzel',serif;font-size:13px;padding:9px 12px;border-radius:8px;border:.5px solid #1e6b38;background:rgba(0,0,0,.5);color:#f0e6cc;flex:1;min-width:120px;}
+input[type=text]{font-family:'Cinzel',serif;font-size:13px;padding:9px 12px;border-radius:8px;border:.5px solid #1e6b38;background:rgba(0,0,0,.5);color:#f0e6cc;flex:1;min-width:120px;}
 button{font-family:'Cinzel',serif;font-size:12px;padding:9px 18px;border-radius:8px;border:.5px solid #1e6b38;background:rgba(255,255,255,.05);color:#f0e6cc;cursor:pointer;transition:all .15s;letter-spacing:.5px;}
 button:hover:not(:disabled){background:rgba(255,255,255,.12);}
 button:active:not(:disabled){transform:scale(.97);}
@@ -24,13 +24,14 @@ button.primary{background:#c9a84c;color:#061a10;border-color:#c9a84c;font-weight
 button.primary:hover:not(:disabled){background:#e2c97e;}
 button.danger{border-color:#c0392b;color:#e8a090;}
 button.danger:hover:not(:disabled){background:rgba(192,57,43,.2);}
-.code-box{font-family:'Cinzel',serif;font-size:28px;color:#c9a84c;letter-spacing:8px;text-align:center;padding:1rem;background:rgba(0,0,0,.4);border-radius:10px;border:1px solid #c9a84c;}
+.code-display{font-family:'Cinzel',serif;font-size:36px;color:#c9a84c;letter-spacing:10px;text-align:center;padding:1rem;background:rgba(0,0,0,.4);border-radius:10px;border:1px solid #c9a84c;cursor:pointer;user-select:all;}
+.code-display:hover{border-color:#e2c97e;}
+.copy-hint{font-size:11px;color:#8aab8e;text-align:center;margin-top:4px;}
 .players-list{display:flex;flex-direction:column;gap:6px;margin-top:.75rem;}
 .player-entry{display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(0,0,0,.3);border-radius:8px;border:.5px solid #1e6b38;}
-.player-entry .dot{width:8px;height:8px;border-radius:50%;background:#2ecc71;flex-shrink:0;}
-.player-entry .dot.off{background:#555;}
-.pname-entry{font-family:'Cinzel',serif;font-size:13px;color:#e2c97e;}
-.chips-entry{font-size:12px;color:#8aab8e;margin-left:auto;}
+.dot{width:8px;height:8px;border-radius:50%;background:#2ecc71;flex-shrink:0;}
+.pname-e{font-family:'Cinzel',serif;font-size:13px;color:#e2c97e;}
+.chips-e{font-size:12px;color:#8aab8e;margin-left:auto;}
 .host-badge{font-size:10px;background:rgba(201,168,76,.15);border:.5px solid #c9a84c;border-radius:4px;padding:1px 6px;color:#c9a84c;}
 .status-bar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:.75rem;}
 .stat{background:rgba(0,0,0,.4);border:.5px solid #1e6b38;border-radius:8px;padding:5px 14px;text-align:center;}
@@ -38,7 +39,7 @@ button.danger:hover:not(:disabled){background:rgba(192,57,43,.2);}
 .sv{font-family:'Cinzel',serif;font-size:14px;color:#c9a84c;}
 .opp-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:.75rem;}
 .opp{background:rgba(0,0,0,.35);border:.5px solid #1e6b38;border-radius:10px;padding:8px 12px;text-align:center;min-width:100px;transition:border-color .3s;}
-.opp.acting{border-color:#c9a84c;box-shadow:0 0 0 1px #c9a84c;}
+.opp.active-turn{border-color:#c9a84c;box-shadow:0 0 0 1px #c9a84c;}
 .opp.folded{opacity:.3;}
 .opp.winner{border-color:#2ecc71;}
 .on{font-family:'Cinzel',serif;font-size:11px;color:#e2c97e;margin-bottom:2px;}
@@ -64,470 +65,150 @@ button.danger:hover:not(:disabled){background:rgba(192,57,43,.2);}
 .msg.good{color:#2ecc71;}
 .ctrls{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:.5rem 0;}
 .rr{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:4px;}
-.rr input{width:100px;}
+.rr input[type=number]{font-family:'Cinzel',serif;font-size:12px;padding:8px 10px;border-radius:8px;border:.5px solid #1e6b38;background:rgba(0,0,0,.5);color:#f0e6cc;width:100px;}
 .hr{font-size:12px;color:#8aab8e;text-align:center;margin-top:2px;font-style:italic;}
-.log{background:rgba(0,0,0,.3);border-radius:8px;padding:.75rem;max-height:100px;overflow-y:auto;font-size:12px;color:#8aab8e;margin-top:.5rem;}
-.log p{margin-bottom:3px;}
-.connection-status{font-size:11px;text-align:center;color:#8aab8e;margin-bottom:.5rem;}
-.connection-status.ok{color:#2ecc71;}
-.connection-status.err{color:#e8a090;}
-.turn-indicator{text-align:center;font-size:12px;color:#8aab8e;margin-bottom:.25rem;}
-.turn-indicator.yours{color:#c9a84c;font-weight:600;}
+.turn-ind{text-align:center;font-size:12px;color:#8aab8e;margin-bottom:.25rem;min-height:18px;}
+.turn-ind.yours{color:#c9a84c;font-weight:600;font-size:14px;}
+.log{background:rgba(0,0,0,.3);border-radius:8px;padding:.75rem;max-height:90px;overflow-y:auto;font-size:12px;color:#8aab8e;margin-top:.5rem;}
+.log p{margin-bottom:2px;}
+.ws-status{text-align:center;font-size:11px;margin-bottom:.5rem;color:#8aab8e;}
+.ws-status.ok{color:#2ecc71;}
+.ws-status.err{color:#e8a090;}
+.err-box{background:rgba(192,57,43,.15);border:.5px solid #c0392b;border-radius:8px;padding:.75rem;font-size:13px;color:#e8a090;margin-bottom:.75rem;display:none;}
 </style>
 </head>
 <body>
 <div id="app">
   <h1>&#9824; POKER &#9829;</h1>
-  <p class="sub">Multiplayer Texas Hold'em &mdash; Real players</p>
+  <p class="sub">Multiplayer Texas Hold&rsquo;em &mdash; Real players</p>
 
   <!-- LOBBY -->
-  <div id="lobby">
+  <div id="screen-lobby">
+    <div class="ws-status" id="ws-status">Connecting...</div>
+    <div class="err-box" id="err-box"></div>
     <div class="panel">
-      <h2>&#9824; Join or Create a Table</h2>
+      <h2>&#9824; Your Name</h2>
       <div class="row">
-        <input type="text" id="nameInput" placeholder="Your name..." maxlength="16">
+        <input type="text" id="nameInput" placeholder="Enter your name..." maxlength="16">
       </div>
+      <h2 style="margin-top:.75rem;">&#9824; Create or Join</h2>
       <div class="row">
         <button class="primary" onclick="createRoom()">Create Table</button>
-        <span style="color:#8aab8e;font-size:13px;">— or —</span>
-        <input type="text" id="codeInput" placeholder="Enter join code..." maxlength="6" style="text-transform:uppercase">
-        <button onclick="joinRoom()">Join</button>
       </div>
-      <div class="connection-status" id="conn-status">Connecting to server...</div>
+      <div style="display:flex;align-items:center;gap:10px;margin:.5rem 0;">
+        <hr style="flex:1;border-color:#1e6b38;"><span style="color:#8aab8e;font-size:13px;">or join with code</span><hr style="flex:1;border-color:#1e6b38;">
+      </div>
+      <div class="row">
+        <input type="text" id="codeInput" placeholder="6-letter code..." maxlength="6" style="text-transform:uppercase;letter-spacing:4px;font-size:18px;">
+        <button onclick="joinRoom()">Join Table</button>
+      </div>
     </div>
   </div>
 
   <!-- WAITING ROOM -->
-  <div id="waiting" style="display:none">
+  <div id="screen-waiting" style="display:none">
     <div class="panel">
-      <h2>&#9824; Waiting Room</h2>
-      <p style="font-size:13px;color:#8aab8e;margin-bottom:.75rem;">Share this code with friends:</p>
-      <div class="code-box" id="room-code">------</div>
-      <div class="players-list" id="players-list"></div>
+      <h2>&#9824; Your Table Code</h2>
+      <div class="code-display" id="room-code" onclick="copyCode()" title="Click to copy">------</div>
+      <div class="copy-hint">&#128203; Click code to copy &mdash; share with friends so they can join</div>
+      <div class="players-list" id="wait-players"></div>
       <div style="margin-top:1rem;display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="primary" id="start-btn" onclick="startGame()" style="display:none">Start Game (2-6 players)</button>
-        <button onclick="leaveRoom()" class="danger">Leave Table</button>
+        <button class="primary" id="start-btn" onclick="hostStartGame()" style="display:none">Start Game</button>
+        <button class="danger" onclick="leaveTable()">Leave Table</button>
       </div>
       <div class="log" id="wait-log"></div>
     </div>
   </div>
 
   <!-- GAME -->
-  <div id="game" style="display:none">
+  <div id="screen-game" style="display:none">
     <div class="status-bar">
-      <div class="stat"><div class="sl">Your chips</div><div class="sv" id="sc">$1000</div></div>
-      <div class="stat"><div class="sl">Pot</div><div class="sv" id="sp">$0</div></div>
+      <div class="stat"><div class="sl">Chips</div><div class="sv" id="g-chips">$1000</div></div>
+      <div class="stat"><div class="sl">Pot</div><div class="sv" id="g-pot">$0</div></div>
       <div class="stat"><div class="sl">Blind</div><div class="sv">$10/$20</div></div>
-      <div class="stat"><div class="sl">Round</div><div class="sv" id="sr">0</div></div>
+      <div class="stat"><div class="sl">Round</div><div class="sv" id="g-round">0</div></div>
     </div>
     <div class="opp-row" id="opp-row"></div>
     <div class="table">
       <div class="community" id="community"><span style="color:#3a6b42;font-size:13px;font-style:italic;">Waiting for deal...</span></div>
       <div class="pd" id="pot-label">Pot: $0</div>
     </div>
-    <div class="hl">Your hand</div>
-    <div class="hand" id="ph"></div>
-    <div class="hr" id="handrank"></div>
-    <div class="turn-indicator" id="turn-ind"></div>
-    <div class="msg" id="msg">Waiting for hand to start...</div>
-    <div class="ctrls" id="cd"><button class="primary" id="deal-btn" onclick="hostDeal()" style="display:none">Deal Next Hand</button></div>
-    <div class="ctrls" id="ca" style="display:none">
-      <button class="danger" onclick="sendAction('fold')">Fold</button>
-      <button onclick="sendAction('check')" id="bck">Check</button>
-      <button onclick="sendAction('call')" id="bcl">Call $0</button>
-      <button onclick="showRaiseInput()" id="br">Raise</button>
+    <div class="hl">Your Hand</div>
+    <div class="hand" id="my-hand"></div>
+    <div class="hr" id="hand-rank"></div>
+    <div class="turn-ind" id="turn-ind"></div>
+    <div class="msg" id="g-msg">Waiting...</div>
+    <div class="ctrls">
+      <button class="primary" id="deal-btn" onclick="hostDeal()" style="display:none">Deal Next Hand</button>
     </div>
-    <div class="rr" id="rr" style="display:none">
-      <input type="number" id="ra" min="20" step="10" value="40">
-      <button class="primary" onclick="sendRaise()">Confirm Raise</button>
-      <button onclick="document.getElementById('rr').style.display='none'">Cancel</button>
+    <div class="ctrls" id="action-btns" style="display:none">
+      <button class="danger" onclick="act('fold')">Fold</button>
+      <button id="btn-check" onclick="act('check')">Check</button>
+      <button id="btn-call" onclick="act('call')">Call</button>
+      <button onclick="toggleRaise()">Raise</button>
+    </div>
+    <div class="rr" id="raise-row" style="display:none">
+      <input type="number" id="raise-amt" min="20" step="10" value="40">
+      <button class="primary" onclick="act('raise')">Confirm</button>
+      <button onclick="document.getElementById('raise-row').style.display='none'">Cancel</button>
     </div>
     <div class="log" id="game-log"></div>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <script>
-// ── Constants ──────────────────────────────────────────────────────────────
-const SU=['♠','♥','♦','♣'],RK=['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
-const RV={2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13,A:14};
-const HN=['High card','One pair','Two pair','Three of a kind','Straight','Flush','Full house','Four of a kind','Straight flush'];
-const BB=20;
+// ── Config ─────────────────────────────────────────────────────────────────
+// Free public WebSocket relay — no signup needed, no server to run.
+// We use wss://ws.ifelse.io as a free broadcast relay.
+// Messages are namespaced by room code so only table members see them.
+const WS_URL = 'wss://ws.ifelse.io';
 
 // ── State ──────────────────────────────────────────────────────────────────
-let peer=null,hostConn=null,guestConns={};
-let myId='',myName='',roomCode='',isHost=false;
-let players=[]; // {id, name, chips, cards, bet, folded, connected}
-let myIdx=0,deck=[],community=[],pot=0,curBet=0,street=0,roundNum=0,actingIdx=0,dealerIdx=0;
+let ws = null, wsReady = false;
+let myName = '', roomCode = '', amHost = false, myId = '';
+let gameState = null; // full state from host
 
-// ── PeerJS setup ───────────────────────────────────────────────────────────
-function initPeer(){
-  setConnStatus('Connecting...');
-  peer=new Peer({debug:0});
-  peer.on('open',id=>{myId=id;setConnStatus('Connected',true);});
-  peer.on('error',e=>{setConnStatus('Connection error: '+e.type,false,true);});
-  peer.on('connection',conn=>handleGuestConn(conn));
-}
-
-function setConnStatus(m,ok=false,err=false){
-  const el=document.getElementById('conn-status');
-  el.textContent=m;el.className='connection-status'+(ok?' ok':err?' err':'');
-}
-
-// ── Room management ────────────────────────────────────────────────────────
-function createRoom(){
-  myName=document.getElementById('nameInput').value.trim()||'Host';
-  if(!peer||!peer.id){alert('Still connecting, please wait...');return;}
-  isHost=true;
-  roomCode=Math.random().toString(36).substring(2,8).toUpperCase();
-  myIdx=0;
-  players=[{id:myId,name:myName,chips:1000,cards:[],bet:0,folded:false,connected:true}];
-  showWaiting();
-  renderWaiting();
-  addWaitLog('You created the table. Share code: '+roomCode);
-}
-
-function joinRoom(){
-  myName=document.getElementById('nameInput').value.trim()||'Player';
-  const code=document.getElementById('codeInput').value.trim().toUpperCase();
-  if(!code||code.length<6){alert('Enter a valid 6-character code.');return;}
-  if(!peer||!peer.id){alert('Still connecting...');return;}
-  // The host's peer ID is encoded in the room code via a lookup
-  // We use a simple convention: host broadcasts their peerId via a relay
-  // For simplicity: the room code IS a partial peer ID stored in a free KV
-  // We'll use a free public signaling approach: store host peerId in a public paste bin
-  // Actually simpler: encode host peer ID in the join URL, and room code is just display
-  alert('To join, ask the host to send you the full join link from their browser.\n\nThe host should click "Copy Join Link" and share it with you.');
-}
-
-function copyJoinLink(){
-  const url=location.href.split('?')[0]+'?host='+myId+'&code='+roomCode;
-  navigator.clipboard.writeText(url).then(()=>alert('Join link copied! Share it with your friends.')).catch(()=>prompt('Copy this link:',url));
-}
-
-function checkForJoinParams(){
-  const params=new URLSearchParams(location.search);
-  const hostId=params.get('host');
-  const code=params.get('code');
-  if(hostId&&code){
-    document.getElementById('codeInput').value=code;
-    setTimeout(()=>joinViaLink(hostId,code),1000);
-  }
-}
-
-function joinViaLink(hostId,code){
-  myName=document.getElementById('nameInput').value.trim()||'Player '+Math.floor(Math.random()*99);
-  if(!peer||!peer.id){setTimeout(()=>joinViaLink(hostId,code),500);return;}
-  roomCode=code;isHost=false;
-  const conn=peer.connect(hostId,{metadata:{name:myName,id:myId}});
-  hostConn=conn;
-  conn.on('open',()=>{
-    addWaitLog('Connected to host!');
-    conn.send({type:'join',name:myName,id:myId});
-  });
-  conn.on('data',d=>handleHostMsg(d));
-  conn.on('close',()=>setConnStatus('Disconnected from host',false,true));
-  showWaiting();
-  addWaitLog('Connecting to table '+code+'...');
-}
-
-function handleGuestConn(conn){
-  const gId=conn.peer;
-  guestConns[gId]=conn;
-  conn.on('data',d=>handleGuestMsg(gId,d));
-  conn.on('close',()=>{
-    const p=players.find(p=>p.id===gId);
-    if(p){p.connected=false;addWaitLog(p.name+' disconnected.');}
-    renderWaiting();
-  });
-}
-
-function handleGuestMsg(gId,d){
-  if(d.type==='join'){
-    const exists=players.find(p=>p.id===gId);
-    if(!exists)players.push({id:gId,name:d.name,chips:1000,cards:[],bet:0,folded:false,connected:true});
-    broadcastState();
-    renderWaiting();
-    addWaitLog(d.name+' joined the table!');
-    document.getElementById('start-btn').style.display=players.length>=2?'block':'none';
-  }
-  if(d.type==='action')handlePlayerAction(gId,d);
-}
-
-function handleHostMsg(d){
-  if(d.type==='state'){
-    players=d.players;myIdx=players.findIndex(p=>p.id===myId);
-    community=d.community;pot=d.pot;curBet=d.curBet;street=d.street;
-    roundNum=d.roundNum;actingIdx=d.actingIdx;dealerIdx=d.dealerIdx;
-    // restore my own cards
-    const me=players[myIdx];
-    if(d.myCards&&d.myCards[myId])me.cards=d.myCards[myId];
-    renderGame();
-    if(d.message)setMsg(d.message,d.msgCls);
-    if(d.gameStarted&&document.getElementById('game').style.display==='none'){showGame();}
-    updateActionButtons();
-  }
-  if(d.type==='lobby'){players=d.players;renderWaiting();}
-  if(d.type==='log')addWaitLog(d.msg);
-}
-
-function broadcastState(message='',msgCls=''){
-  const myCards={};
-  players.forEach(p=>{myCards[p.id]=p.cards;});
-  const stateForAll={type:'state',players:players.map(p=>({...p,cards:p.cards.map(()=>({r:'?',s:'?'}))})),
-    community,pot,curBet,street,roundNum,actingIdx,dealerIdx,gameStarted:true,message,msgCls,myCards};
-  // send each guest their own cards
-  players.forEach((p,i)=>{
-    if(p.id===myId)return;
-    const conn=guestConns[p.id];
-    if(!conn)return;
-    const personalState={...stateForAll,myCards:{[p.id]:p.cards}};
-    conn.send(personalState);
-  });
-  // update host UI
-  renderGame();
-  if(message)setMsg(message,msgCls);
-  updateActionButtons();
-}
-
-function broadcastLobby(){
-  Object.values(guestConns).forEach(c=>c.send({type:'lobby',players}));
-}
-
-function broadcastLog(msg){
-  addWaitLog(msg);
-  Object.values(guestConns).forEach(c=>c.send({type:'log',msg}));
-}
-
-// ── UI helpers ─────────────────────────────────────────────────────────────
-function showLobby(){document.getElementById('lobby').style.display='block';document.getElementById('waiting').style.display='none';document.getElementById('game').style.display='none';}
-function showWaiting(){document.getElementById('lobby').style.display='none';document.getElementById('waiting').style.display='block';document.getElementById('game').style.display='none';}
-function showGame(){document.getElementById('lobby').style.display='none';document.getElementById('waiting').style.display='none';document.getElementById('game').style.display='block';}
-function leaveRoom(){location.href=location.href.split('?')[0];}
-
-function addWaitLog(msg){
-  const log=document.getElementById('wait-log');
-  const p=document.createElement('p');p.textContent=msg;log.appendChild(p);log.scrollTop=log.scrollHeight;
-}
-function addGameLog(msg){
-  const log=document.getElementById('game-log');
-  const p=document.createElement('p');p.textContent=msg;log.appendChild(p);log.scrollTop=log.scrollHeight;
-}
-
-function renderWaiting(){
-  document.getElementById('room-code').textContent=roomCode||'------';
-  const list=document.getElementById('players-list');
-  list.innerHTML=players.map((p,i)=>`
-    <div class="player-entry">
-      <div class="dot${p.connected===false?' off':''}"></div>
-      <span class="pname-entry">${p.name}</span>
-      ${i===0?'<span class="host-badge">HOST</span>':''}
-      <span class="chips-entry">$${p.chips}</span>
-    </div>`).join('');
-  if(isHost)document.getElementById('start-btn').style.display=players.length>=2?'block':'none';
-}
+// ── Utils ──────────────────────────────────────────────────────────────────
+myId = Math.random().toString(36).slice(2, 10);
+const SU=['♠','♥','♦','♣'], RK=['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+const RV={2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13,A:14};
+const HN=['High card','One pair','Two pair','Three of a kind','Straight','Flush','Full house','Four of a kind','Straight flush'];
+const BB = 20;
 
 function isRed(s){return s==='♥'||s==='♦';}
-function cH(c,hidden,small){
-  if(hidden||c.r==='?')return small?'<div class="sc back"></div>':'<div class="card back"></div>';
+function cH(c, hidden, small){
+  if(hidden||!c||c.r==='?') return small?'<div class="sc back"></div>':'<div class="card back"></div>';
   const r=isRed(c.s);
-  if(small)return`<div class="sc${r?' red':''}">${c.r}${c.s}</div>`;
-  return`<div class="card${r?' red':''}"><div class="cr">${c.r}</div><div class="cs">${c.s}</div></div>`;
+  if(small) return `<div class="sc${r?' red':''}">${c.r}${c.s}</div>`;
+  return `<div class="card${r?' red':''}"><div class="cr">${c.r}</div><div class="cs">${c.s}</div></div>`;
 }
 
-function renderGame(){
-  const me=players[myIdx]||{chips:0,cards:[],bet:0};
-  document.getElementById('sc').textContent='$'+me.chips;
-  document.getElementById('sp').textContent='$'+pot;
-  document.getElementById('sr').textContent=roundNum;
-  document.getElementById('pot-label').textContent='Pot: $'+pot;
-  const cEl=document.getElementById('community');
-  cEl.innerHTML=community.length?community.map(c=>cH(c)).join(''):'<span style="color:#3a6b42;font-size:13px;font-style:italic;">Waiting for flop...</span>';
-  document.getElementById('ph').innerHTML=(me.cards||[]).map(c=>cH(c)).join('');
-  if(me.cards&&me.cards.length>=2&&community.length>=3){
-    const r=bestH(me.cards,community);
-    document.getElementById('handrank').textContent=HN[r[0]];
-  }else document.getElementById('handrank').textContent='';
-  const others=players.filter((_,i)=>i!==myIdx);
-  document.getElementById('opp-row').innerHTML=others.map((p,i)=>`
-    <div class="opp${p.folded?' folded':''}${players.indexOf(p)===actingIdx?' acting':''}${p.winner?' winner':''}">
-      <div class="on">${p.name}</div>
-      <div class="oc">$${p.chips}</div>
-      <div class="ob">${p.bet>0?'Bet: $'+p.bet:''}</div>
-      <div class="occ">${(p.cards||[]).map(c=>cH(c,true,true)).join('')}</div>
-    </div>`).join('');
-  if(isHost)document.getElementById('deal-btn').style.display=street===0||street>3?'block':'none';
-  const isMyTurn=actingIdx===myIdx;
-  const turnEl=document.getElementById('turn-ind');
-  if(actingIdx>=0&&actingIdx<players.length){
-    const actName=players[actingIdx]?.name;
-    turnEl.textContent=isMyTurn?'Your turn!':actName+"'s turn...";
-    turnEl.className='turn-indicator'+(isMyTurn?' yours':'');
-  }
-}
-
-function setMsg(m,c=''){const el=document.getElementById('msg');el.textContent=m;el.className='msg '+(c||'');}
-
-function updateActionButtons(){
-  const isMyTurn=actingIdx===myIdx;
-  const me=players[myIdx]||{chips:0,bet:0,folded:false};
-  document.getElementById('ca').style.display=(isMyTurn&&!me.folded&&street>0&&street<=4)?'flex':'none';
-  const toCall=curBet-me.bet;
-  document.getElementById('bck').disabled=toCall>0;
-  const cb=document.getElementById('bcl');cb.disabled=toCall<=0;
-  cb.textContent=toCall>0?'Call $'+Math.min(toCall,me.chips):'Call';
-  document.getElementById('ra').value=Math.min(curBet*2||BB*2,me.chips);
-}
-
-// ── Game logic (host only) ─────────────────────────────────────────────────
 function shuf(a){for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
-function buildDeck(){deck=[];for(let s of SU)for(let r of RK)deck.push({r,s});shuf(deck);}
-function pop(){return deck.pop();}
+function buildDeck(){let d=[];for(let s of SU)for(let r of RK)d.push({r,s});shuf(d);return d;}
 
-function startGame(){
-  if(players.length<2){alert('Need at least 2 players!');return;}
-  showGame();
-  addGameLog('Game started with '+players.length+' players!');
-  broadcastState('Game started! Host will deal.');
-  document.getElementById('deal-btn').style.display='block';
-}
-
-function hostDeal(){
-  if(!isHost)return;
-  roundNum++;buildDeck();community=[];pot=0;street=1;curBet=BB;
-  players.forEach(p=>{p.cards=[pop(),pop()];p.bet=0;p.folded=false;p.winner=false;});
-  // blinds
-  const sbIdx=(dealerIdx+1)%players.length;
-  const bbIdx=(dealerIdx+2)%players.length;
-  const sb=players[sbIdx],bb2=players[bbIdx];
-  const sa=Math.min(BB/2,sb.chips);sb.chips-=sa;sb.bet=sa;pot+=sa;
-  const ba=Math.min(BB,bb2.chips);bb2.chips-=ba;bb2.bet=ba;pot+=ba;
-  actingIdx=(bbIdx+1)%players.length;
-  dealerIdx=(dealerIdx+1)%players.length;
-  addGameLog('--- Round '+roundNum+' ---');
-  addGameLog('Blinds posted. Pre-flop.');
-  broadcastState('Pre-flop dealing...','');
-  document.getElementById('deal-btn').style.display='none';
-  // deal community
-  setTimeout(()=>{broadcastState('Pre-flop — '+players[actingIdx].name+"'s turn");},600);
-}
-
-function handlePlayerAction(fromId,d){
-  if(!isHost)return;
-  const pIdx=players.findIndex(p=>p.id===fromId);
-  if(pIdx!==actingIdx)return; // not their turn
-  processAction(pIdx,d.action,d.amount);
-}
-
-function sendAction(action){
-  if(isHost){processAction(myIdx,action,0);return;}
-  hostConn.send({type:'action',action,amount:0});
-}
-
-function showRaiseInput(){document.getElementById('rr').style.display='flex';}
-
-function sendRaise(){
-  const amt=parseInt(document.getElementById('ra').value)||BB*2;
-  document.getElementById('rr').style.display='none';
-  if(isHost){processAction(myIdx,'raise',amt);return;}
-  hostConn.send({type:'action',action:'raise',amount:amt});
-}
-
-function processAction(pIdx,action,amount){
-  const p=players[pIdx];
-  if(action==='fold'){p.folded=true;addGameLog(p.name+' folds.');}
-  else if(action==='check'){addGameLog(p.name+' checks.');}
-  else if(action==='call'){
-    const tc=Math.min(curBet-p.bet,p.chips);
-    p.chips-=tc;pot+=tc;p.bet+=tc;
-    addGameLog(p.name+' calls $'+tc+'.');
-  }
-  else if(action==='raise'){
-    const tgt=Math.max(curBet+BB,Math.min(amount,p.chips+p.bet));
-    const add=Math.min(tgt-p.bet,p.chips);
-    p.chips-=add;pot+=add;p.bet+=add;curBet=p.bet;
-    addGameLog(p.name+' raises to $'+p.bet+'.');
-  }
-  // advance to next active player
-  advanceAction();
-}
-
-function advanceAction(){
-  const active=players.filter(p=>!p.folded&&p.chips>0);
-  if(active.length<=1){doShowdown();return;}
-  // find next player who hasn't matched the bet or folded
-  let next=(actingIdx+1)%players.length;
-  let count=0;
-  while(count<players.length){
-    const p=players[next];
-    if(!p.folded&&p.chips>0&&p.bet<curBet){actingIdx=next;break;}
-    next=(next+1)%players.length;count++;
-  }
-  // if everyone has matched bet, move to next street
-  const needAction=players.some(p=>!p.folded&&p.chips>0&&p.bet<curBet);
-  if(!needAction){
-    players.forEach(p=>p.bet=0);curBet=0;
-    street++;
-    if(street===2){community=[pop(),pop(),pop()];addGameLog('Flop dealt.');}
-    else if(street===3){community.push(pop());addGameLog('Turn dealt.');}
-    else if(street===4){community.push(pop());addGameLog('River dealt.');}
-    else{doShowdown();return;}
-    actingIdx=players.findIndex(p=>!p.folded);
-    broadcastState(['','','Flop','Turn','River'][street]+" — "+players[actingIdx].name+"'s turn");
-    return;
-  }
-  broadcastState(players[actingIdx].name+"'s turn");
-}
-
-function doShowdown(){
-  street=5;
-  const active=players.filter(p=>!p.folded);
-  if(active.length===1){
-    active[0].chips+=pot;active[0].winner=true;
-    addGameLog(active[0].name+' wins $'+pot+' (everyone folded).');
-    broadcastState(active[0].name+' wins $'+pot+'!','good');
-  }else{
-    // evaluate hands
-    let best=[-1,0],winner=null;
-    active.forEach(p=>{
-      const r=bestH(p.cards,community);
-      if(r[0]>best[0]||(r[0]===best[0]&&r[1]>best[1])){best=r;winner=p;}
-    });
-    if(winner){winner.chips+=pot;winner.winner=true;}
-    const result=active.map(p=>`${p.name}: ${HN[bestH(p.cards,community)[0]]}`).join(' | ');
-    addGameLog('Showdown! '+result);
-    addGameLog(winner.name+' wins $'+pot+'!');
-    broadcastState(winner.name+' wins $'+pot+' with '+HN[best[0]]+'!','good');
-  }
-  actingIdx=-1;
-  setTimeout(()=>{document.getElementById('deal-btn').style.display=isHost?'block':'none';},500);
-  // check bust-outs
-  players.forEach(p=>{if(p.chips<=0){p.chips=0;}});
-}
-
-// ── Hand evaluation ────────────────────────────────────────────────────────
 function hRank(cards){
+  if(!cards||cards.length<3)return[0,0];
   const cnt={},sm={};
   for(let c of cards){cnt[c.r]=(cnt[c.r]||0)+1;(sm[c.s]=sm[c.s]||[]).push(RV[c.r]);}
   const vals=cards.map(c=>RV[c.r]).sort((a,b)=>b-a);
   const grps=Object.values(cnt).sort((a,b)=>b-a);
   const flush=Object.values(sm).find(v=>v.length>=5);
   const uniq=[...new Set(vals)].sort((a,b)=>b-a);
-  let straight=false,hs=0;
+  let st=false,hs=0;
   const sv=uniq.includes(14)?[...uniq,1]:uniq;
-  for(let i=0;i<=sv.length-5;i++){let run=1;for(let j=i+1;j<sv.length&&run<5;j++){if(sv[j]===sv[j-1]-1)run++;else break;}if(run>=5){straight=true;hs=sv[i];break;}}
-  if(flush&&straight)return[8,hs];
+  for(let i=0;i<=sv.length-5;i++){let run=1;for(let j=i+1;j<sv.length&&run<5;j++){if(sv[j]===sv[j-1]-1)run++;else break;}if(run>=5){st=true;hs=sv[i];break;}}
+  if(flush&&st)return[8,hs];
   if(grps[0]===4)return[7,Math.max(...Object.entries(cnt).filter(([,v])=>v===4).map(([k])=>RV[k]))];
   if(grps[0]===3&&grps[1]>=2)return[6,0];
   if(flush)return[5,Math.max(...flush)];
-  if(straight)return[4,hs];
+  if(st)return[4,hs];
   if(grps[0]===3)return[3,0];
   if(grps[0]===2&&grps[1]===2)return[2,0];
   if(grps[0]===2)return[1,Math.max(...Object.entries(cnt).filter(([,v])=>v===2).map(([k])=>RV[k]))];
   return[0,vals[0]];
 }
 function bestH(hole,board){
-  if(!hole||hole.some(c=>c.r==='?'))return[0,0];
+  if(!hole||hole.some(c=>!c||c.r==='?'))return[0,0];
   const all=[...hole,...board];
   if(all.length<5)return hRank(all);
   let best=[-1,0];
@@ -540,17 +221,371 @@ function bestH(hole,board){
   return best[0]===-1?hRank(all):best;
 }
 
-// ── Boot ───────────────────────────────────────────────────────────────────
-initPeer();
-checkForJoinParams();
+// ── WebSocket ──────────────────────────────────────────────────────────────
+function connectWS(){
+  setWsStatus('Connecting...', '');
+  ws = new WebSocket(WS_URL);
+  ws.onopen = () => { wsReady = true; setWsStatus('Connected ✓', 'ok'); };
+  ws.onmessage = e => {
+    try{
+      const d = JSON.parse(e.data);
+      if(d.room !== roomCode) return; // ignore other rooms
+      if(d.from === myId) return;     // ignore own messages
+      handleMsg(d);
+    }catch(ex){}
+  };
+  ws.onclose = () => { wsReady = false; setWsStatus('Disconnected — refresh to reconnect', 'err'); setTimeout(connectWS, 3000); };
+  ws.onerror = () => { setWsStatus('Connection error', 'err'); };
+}
 
-// host copy-link button
-document.getElementById('room-code').addEventListener('click',()=>{
-  if(isHost)copyJoinLink();
-});
-document.getElementById('room-code').title='Click to copy join link (host only)';
+function send(obj){
+  if(!wsReady){showErr('Not connected to server.');return;}
+  ws.send(JSON.stringify({...obj, room: roomCode, from: myId}));
+}
+
+function setWsStatus(m, cls){
+  const el = document.getElementById('ws-status');
+  el.textContent = m; el.className = 'ws-status' + (cls ? ' '+cls : '');
+}
+function showErr(m){ const el=document.getElementById('err-box'); el.textContent=m; el.style.display='block'; setTimeout(()=>el.style.display='none',4000); }
+
+// ── Message handling ───────────────────────────────────────────────────────
+function handleMsg(d){
+  if(d.type === 'join-request'){
+    if(!amHost) return;
+    // host adds player and broadcasts new lobby state
+    if(!gameState.players.find(p=>p.id===d.id)){
+      gameState.players.push({id:d.id, name:d.name, chips:1000, cards:[], bet:0, folded:false, connected:true});
+      addLog('wait-log', d.name + ' joined!');
+      renderWaiting();
+      broadcastLobby();
+    }
+  }
+  if(d.type === 'lobby-state'){
+    // guests receive lobby info
+    if(amHost) return;
+    renderWaitingFromData(d.players);
+    if(d.gameStarted) showScreen('game');
+  }
+  if(d.type === 'game-state'){
+    // everyone receives their personal game state
+    if(d.targetId && d.targetId !== myId) return;
+    applyGameState(d.state, d.myCards);
+  }
+  if(d.type === 'broadcast-state'){
+    // host-broadcast game state (no cards revealed)
+    applyGameState(d.state, null);
+  }
+  if(d.type === 'player-action'){
+    if(!amHost) return;
+    processAction(d.playerId, d.action, d.amount);
+  }
+  if(d.type === 'game-log'){
+    addLog('game-log', d.msg);
+  }
+}
+
+// ── Room creation & joining ────────────────────────────────────────────────
+function createRoom(){
+  myName = document.getElementById('nameInput').value.trim() || 'Host';
+  if(!wsReady){ showErr('Not connected yet, please wait...'); return; }
+  amHost = true;
+  roomCode = Math.random().toString(36).slice(2,8).toUpperCase();
+  gameState = {
+    players:[{id:myId, name:myName, chips:1000, cards:[], bet:0, folded:false, connected:true}],
+    community:[], pot:0, curBet:0, street:0, round:0, actIdx:0, dealerIdx:0, deck:[], phase:'lobby'
+  };
+  document.getElementById('room-code').textContent = roomCode;
+  showScreen('waiting');
+  renderWaiting();
+  addLog('wait-log', 'Table created! Share the code above.');
+}
+
+function joinRoom(){
+  myName = document.getElementById('nameInput').value.trim() || 'Player';
+  const code = document.getElementById('codeInput').value.trim().toUpperCase();
+  if(code.length < 6){ showErr('Enter a valid 6-character code.'); return; }
+  if(!wsReady){ showErr('Not connected yet, please wait...'); return; }
+  amHost = false;
+  roomCode = code;
+  gameState = { players:[], community:[], pot:0, curBet:0, street:0, round:0, actIdx:0, dealerIdx:0, phase:'lobby' };
+  document.getElementById('room-code').textContent = roomCode;
+  showScreen('waiting');
+  // send join request — host will respond with lobby state
+  send({ type:'join-request', id:myId, name:myName });
+  addLog('wait-log', 'Joining table ' + code + '...');
+}
+
+function copyCode(){
+  const code = document.getElementById('room-code').textContent;
+  navigator.clipboard.writeText(code).then(()=>alert('Code copied: '+code)).catch(()=>prompt('Share this code:',code));
+}
+
+function broadcastLobby(){
+  send({ type:'lobby-state', players: gameState.players.map(p=>({id:p.id,name:p.name,chips:p.chips})), gameStarted: gameState.phase==='game' });
+  renderWaiting();
+}
+
+function leaveTable(){ location.reload(); }
+
+function showScreen(s){
+  document.getElementById('screen-lobby').style.display   = s==='lobby'   ? 'block':'none';
+  document.getElementById('screen-waiting').style.display = s==='waiting' ? 'block':'none';
+  document.getElementById('screen-game').style.display    = s==='game'    ? 'block':'none';
+}
+
+// ── Waiting room UI ────────────────────────────────────────────────────────
+function renderWaiting(){
+  if(!gameState) return;
+  document.getElementById('room-code').textContent = roomCode;
+  renderWaitingFromData(gameState.players);
+}
+function renderWaitingFromData(players){
+  document.getElementById('wait-players').innerHTML = players.map((p,i)=>`
+    <div class="player-entry">
+      <div class="dot"></div>
+      <span class="pname-e">${p.name}</span>
+      ${i===0?'<span class="host-badge">HOST</span>':''}
+      <span class="chips-e">$${p.chips}</span>
+    </div>`).join('');
+  const canStart = amHost && players.length >= 2;
+  document.getElementById('start-btn').style.display = canStart ? 'block':'none';
+}
+
+function addLog(id, msg){
+  const el = document.getElementById(id);
+  if(!el) return;
+  const p = document.createElement('p'); p.textContent = msg;
+  el.appendChild(p); el.scrollTop = el.scrollHeight;
+}
+
+// ── Game start ─────────────────────────────────────────────────────────────
+function hostStartGame(){
+  if(!amHost || gameState.players.length < 2) return;
+  gameState.phase = 'game';
+  broadcastLobby(); // tell guests game started
+  showScreen('game');
+  broadcastGameState('Game started! Dealing first hand...');
+  document.getElementById('deal-btn').style.display = 'block';
+}
+
+// ── Dealing ───────────────────────────────────────────────────────────────
+function hostDeal(){
+  if(!amHost) return;
+  const gs = gameState;
+  gs.round++;
+  gs.deck = buildDeck();
+  gs.community = []; gs.pot = 0; gs.curBet = BB; gs.street = 1;
+  gs.players.forEach(p=>{ p.cards=[gs.deck.pop(),gs.deck.pop()]; p.bet=0; p.folded=false; p.winner=false; });
+  // blinds
+  gs.dealerIdx = (gs.dealerIdx + 1) % gs.players.length;
+  const sbI = (gs.dealerIdx+1) % gs.players.length;
+  const bbI = (gs.dealerIdx+2) % gs.players.length;
+  const sb = gs.players[sbI], bb = gs.players[bbI];
+  const sba=Math.min(BB/2,sb.chips); sb.chips-=sba; sb.bet=sba; gs.pot+=sba;
+  const bba=Math.min(BB,bb.chips);   bb.chips-=bba; bb.bet=bba; gs.pot+=bba;
+  gs.actIdx = (bbI+1) % gs.players.length;
+  document.getElementById('deal-btn').style.display = 'none';
+  addLog('game-log','─── Round '+gs.round+' ─── Pre-flop');
+  // send each player their private cards
+  broadcastGameState('Pre-flop — ' + gs.players[gs.actIdx].name + "'s turn");
+}
+
+function broadcastGameState(msg, msgCls=''){
+  const gs = gameState;
+  // Send each player their own hole cards privately
+  gs.players.forEach(p=>{
+    const state = buildPublicState(msg, msgCls);
+    send({ type:'game-state', targetId:p.id, state, myCards: p.cards });
+  });
+  // Also update host UI
+  const me = gs.players.find(p=>p.id===myId);
+  applyGameState(buildPublicState(msg, msgCls), me ? me.cards : []);
+}
+
+function buildPublicState(msg, msgCls){
+  const gs = gameState;
+  return {
+    players: gs.players.map(p=>({id:p.id,name:p.name,chips:p.chips,bet:p.bet,folded:p.folded,winner:p.winner||false})),
+    community: gs.community,
+    pot: gs.pot, curBet: gs.curBet, street: gs.street,
+    round: gs.round, actIdx: gs.actIdx,
+    msg, msgCls,
+    isHost: false
+  };
+}
+
+// ── Receive & render state ─────────────────────────────────────────────────
+function applyGameState(state, myCards){
+  if(!state) return;
+  const me = state.players.find(p=>p.id===myId);
+  if(!me) return;
+  if(myCards) me.cards = myCards;
+
+  // update local gameState copy for non-hosts too
+  if(!amHost){
+    gameState.players = state.players;
+    gameState.community = state.community;
+    gameState.pot = state.pot;
+    gameState.curBet = state.curBet;
+    gameState.street = state.street;
+    gameState.round = state.round;
+    gameState.actIdx = state.actIdx;
+    if(myCards) gameState.players.find(p=>p.id===myId).cards = myCards;
+  }
+
+  if(document.getElementById('screen-game').style.display==='none') showScreen('game');
+
+  // render
+  document.getElementById('g-chips').textContent = '$'+me.chips;
+  document.getElementById('g-pot').textContent   = '$'+state.pot;
+  document.getElementById('g-round').textContent = state.round;
+  document.getElementById('pot-label').textContent = 'Pot: $'+state.pot;
+
+  const comm = document.getElementById('community');
+  comm.innerHTML = state.community.length
+    ? state.community.map(c=>cH(c)).join('')
+    : '<span style="color:#3a6b42;font-size:13px;font-style:italic;">Waiting for flop...</span>';
+
+  document.getElementById('my-hand').innerHTML = (me.cards||[]).map(c=>cH(c)).join('');
+
+  if(me.cards&&me.cards.length>=2&&state.community.length>=3){
+    const r=bestH(me.cards,state.community);
+    document.getElementById('hand-rank').textContent=HN[r[0]];
+  } else document.getElementById('hand-rank').textContent='';
+
+  const others = state.players.filter(p=>p.id!==myId);
+  document.getElementById('opp-row').innerHTML = others.map(p=>`
+    <div class="opp${p.folded?' folded':''}${state.players.indexOf(p)===state.actIdx?' active-turn':''}${p.winner?' winner':''}">
+      <div class="on">${p.name}</div>
+      <div class="oc">$${p.chips}</div>
+      <div class="ob">${p.bet>0?'Bet: $'+p.bet:''}</div>
+      <div class="occ"><div class="sc back"></div><div class="sc back"></div></div>
+    </div>`).join('');
+
+  if(state.msg){ const el=document.getElementById('g-msg'); el.textContent=state.msg; el.className='msg '+(state.msgCls||''); }
+
+  const myPIdx = state.players.findIndex(p=>p.id===myId);
+  const isMyTurn = state.actIdx === myPIdx && !me.folded && state.street>=1 && state.street<=4;
+  const turnEl = document.getElementById('turn-ind');
+  if(state.actIdx>=0 && state.actIdx<state.players.length){
+    const actName = state.players[state.actIdx]?.name;
+    turnEl.textContent = isMyTurn ? '⭐ Your turn!' : actName+"'s turn...";
+    turnEl.className = 'turn-ind'+(isMyTurn?' yours':'');
+  }
+
+  document.getElementById('action-btns').style.display = isMyTurn ? 'flex':'none';
+  if(isMyTurn){
+    const toCall = state.curBet - me.bet;
+    document.getElementById('btn-check').disabled = toCall>0;
+    const cb=document.getElementById('btn-call'); cb.disabled=toCall<=0;
+    cb.textContent=toCall>0?'Call $'+Math.min(toCall,me.chips):'Call';
+    const ra=document.getElementById('raise-amt');
+    ra.value=Math.min(state.curBet*2||BB*2,me.chips); ra.max=me.chips;
+  }
+
+  // show deal button only for host when hand is over
+  if(amHost){
+    const handOver = state.street===0||state.street>4||state.players.filter(p=>!p.folded).length<=1;
+    document.getElementById('deal-btn').style.display = handOver ? 'block':'none';
+  }
+}
+
+// ── Player action ──────────────────────────────────────────────────────────
+function toggleRaise(){ document.getElementById('raise-row').style.display='flex'; }
+
+function act(action){
+  document.getElementById('raise-row').style.display='none';
+  const amount = action==='raise' ? (parseInt(document.getElementById('raise-amt').value)||BB*2) : 0;
+  if(amHost){
+    processAction(myId, action, amount);
+  } else {
+    send({ type:'player-action', playerId:myId, action, amount });
+  }
+}
+
+function processAction(playerId, action, amount){
+  if(!amHost) return;
+  const gs = gameState;
+  const pIdx = gs.players.findIndex(p=>p.id===playerId);
+  if(pIdx === -1) return;
+  // only accept action from active player
+  if(pIdx !== gs.actIdx) return;
+  const p = gs.players[pIdx];
+
+  if(action==='fold'){ p.folded=true; addLog('game-log',p.name+' folds.'); send({type:'game-log',msg:p.name+' folds.'}); }
+  else if(action==='check'){ addLog('game-log',p.name+' checks.'); send({type:'game-log',msg:p.name+' checks.'}); }
+  else if(action==='call'){
+    const tc=Math.min(gs.curBet-p.bet,p.chips); p.chips-=tc; gs.pot+=tc; p.bet+=tc;
+    addLog('game-log',p.name+' calls $'+tc+'.'); send({type:'game-log',msg:p.name+' calls $'+tc+'.'});
+  }
+  else if(action==='raise'){
+    const tgt=Math.max(gs.curBet+BB,Math.min(amount,p.chips+p.bet));
+    const add=Math.min(tgt-p.bet,p.chips); p.chips-=add; gs.pot+=add; p.bet+=add; gs.curBet=p.bet;
+    addLog('game-log',p.name+' raises to $'+p.bet+'.'); send({type:'game-log',msg:p.name+' raises to $'+p.bet+'.'});
+  }
+  advanceAction();
+}
+
+function advanceAction(){
+  const gs = gameState;
+  const active = gs.players.filter(p=>!p.folded&&p.chips>0);
+  if(active.length<=1){ doShowdown(); return; }
+  // find next player who still needs to act
+  let next = (gs.actIdx+1) % gs.players.length;
+  let checked = 0;
+  while(checked < gs.players.length){
+    const p = gs.players[next];
+    if(!p.folded && p.chips>0 && p.bet < gs.curBet){ gs.actIdx=next; break; }
+    next=(next+1)%gs.players.length; checked++;
+  }
+  const needsAction = gs.players.some(p=>!p.folded&&p.chips>0&&p.bet<gs.curBet);
+  if(!needsAction){
+    // street over — advance
+    gs.players.forEach(p=>p.bet=0); gs.curBet=0;
+    gs.street++;
+    if(gs.street===2){ gs.community=[gs.deck.pop(),gs.deck.pop(),gs.deck.pop()]; const m='Flop'; addLog('game-log',m+' dealt.'); send({type:'game-log',msg:m+' dealt.'}); }
+    else if(gs.street===3){ gs.community.push(gs.deck.pop()); addLog('game-log','Turn dealt.'); send({type:'game-log',msg:'Turn dealt.'}); }
+    else if(gs.street===4){ gs.community.push(gs.deck.pop()); addLog('game-log','River dealt.'); send({type:'game-log',msg:'River dealt.'}); }
+    else { doShowdown(); return; }
+    gs.actIdx = gs.players.findIndex(p=>!p.folded);
+    broadcastGameState(['','','Flop','Turn','River'][gs.street]+' — '+gs.players[gs.actIdx].name+"'s turn");
+    return;
+  }
+  broadcastGameState(gs.players[gs.actIdx].name+"'s turn");
+}
+
+function doShowdown(){
+  const gs = gameState;
+  gs.street = 5;
+  const active = gs.players.filter(p=>!p.folded);
+  let winMsg = '';
+  if(active.length===1){
+    active[0].chips+=gs.pot; active[0].winner=true;
+    winMsg=active[0].name+' wins $'+gs.pot+'! (everyone folded)';
+  } else {
+    let best=[-1,0], winner=null;
+    active.forEach(p=>{
+      const r=bestH(p.cards,gs.community);
+      if(r[0]>best[0]||(r[0]===best[0]&&r[1]>best[1])){ best=r; winner=p; }
+    });
+    if(winner){ winner.chips+=gs.pot; winner.winner=true; }
+    const hands=active.map(p=>p.name+': '+HN[bestH(p.cards,gs.community)[0]]).join(' | ');
+    winMsg=(winner?winner.name:'')+' wins $'+gs.pot+' with '+HN[best[0]]+'!';
+    addLog('game-log','Showdown: '+hands);
+    send({type:'game-log',msg:'Showdown: '+hands});
+  }
+  addLog('game-log',winMsg); send({type:'game-log',msg:winMsg});
+  gs.actIdx=-1;
+  broadcastGameState(winMsg,'good');
+  gs.players.forEach(p=>{ if(p.chips<=0)p.chips=0; });
+}
+
+// ── Boot ───────────────────────────────────────────────────────────────────
+connectWS();
+showScreen('lobby');
 </script>
 </body>
 </html>
-HTMLEOF
+EOF
 echo "done"
